@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: Projemento
+
+jwt:
+  access-token-key: '{"kty":"oct","k":"asfgMthWBltjLyJn791pD38LKqirGhI8dWYEh_hzrWI"}'
+  refresh-token-key: '{"kty":"oct","k":"HWS6epvQPr1Y71__89JrI66ONrXJLQOnJT4vaR0OQjM"}'
