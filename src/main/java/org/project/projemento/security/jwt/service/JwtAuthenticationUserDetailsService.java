@@ -22,8 +22,6 @@ public class JwtAuthenticationUserDetailsService
     @Override
     public UserDetails loadUserDetails(PreAuthenticatedAuthenticationToken authenticationToken)
             throws UsernameNotFoundException {
-        System.out.println("----------------------------");
-        System.out.println("I am in JwtAuthenticationUserDetailsService");
         if (authenticationToken.getPrincipal() instanceof JwtToken token){
             return new TokenUser(token.subject(), "nopass", true,true,
                     !this.jdbcTemplate.queryForObject("""

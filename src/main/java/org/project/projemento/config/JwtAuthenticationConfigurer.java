@@ -74,7 +74,7 @@ public class JwtAuthenticationConfigurer
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
         });
 
-        var refreshJwtTokenFilter = new RefreshJwtTokenFilter(this.refreshTokenStringDeserializer);
+        var refreshJwtTokenFilter = new RefreshJwtTokenFilter(this.refreshTokenStringDeserializer, this.jdbcTemplate);
         refreshJwtTokenFilter.setAccessTokenFactory(this.accessTokenFactory);
         refreshJwtTokenFilter.setAccessTokenSerializer(this.accessTokenSerializer);
 

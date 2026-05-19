@@ -1,7 +1,17 @@
 spring:
   application:
     name: Projemento
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/mydatabase}
+    username: ${SPRING_DATASOURCE_USERNAME:myuser}
+    password: ${SPRING_DATASOURCE_PASSWORD:secret}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
 
 jwt:
-  access-token-key: '{"kty":"oct","k":"asfgMthWBltjLyJn791pD38LKqirGhI8dWYEh_hzrWI"}'
-  refresh-token-key: '{"kty":"oct","k":"HWS6epvQPr1Y71__89JrI66ONrXJLQOnJT4vaR0OQjM"}'
+  access-token-key: '${JWT_ACCESS_TOKEN_KEY:{"kty":"oct","k":"asfgMthWBltjLyJn791pD38LKqirGhI8dWYEh_hzrWI"}}'
+  refresh-token-key: '${JWT_REFRESH_TOKEN_KEY:{"kty":"oct","k":"HWS6epvQPr1Y71__89JrI66ONrXJLQOnJT4vaR0OQjM"}}'

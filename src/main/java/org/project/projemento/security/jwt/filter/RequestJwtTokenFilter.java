@@ -17,8 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
-import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -34,8 +33,6 @@ public class RequestJwtTokenFilter extends OncePerRequestFilter {
     @Setter
     private RequestMatcher requestMatcher = PathPatternRequestMatcher
             .withDefaults().matcher(HttpMethod.POST, "/api/users/login/token");
-
-    private SecurityContextRepository securityContextRepository = new RequestAttributeSecurityContextRepository();
 
     @Getter
     @Setter
@@ -58,9 +55,9 @@ public class RequestJwtTokenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         if (this.requestMatcher.matches(request)){
-            if (this.securityContextRepository.containsContext(request)){
-                var context = securityContextRepository.loadDeferredContext(request).get();
-                if (context != null && !(context.getAuthentication() instanceof AnonymousAuthenticationToken)){
+            var context = SecurityContextHolder.getContext();
+            if (context != null && context.getAuthentication() != null){
+                if (!(context.getAuthentication() instanceof AnonymousAuthenticationToken)){
 
                     var authentication = context.getAuthentication();
                     var refreshToken = this.refreshTokenFactory.apply(authentication);

@@ -11,6 +11,7 @@ import org.project.projemento.security.jwt.JwtToken;
 import org.project.projemento.security.jwt.TokensResponse;
 import org.project.projemento.security.jwt.factory.DefaultAccessTokenFactory;
 import org.springframework.http.HttpMethod;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
@@ -18,6 +19,7 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -40,8 +42,11 @@ public class RefreshJwtTokenFilter extends OncePerRequestFilter {
     @Setter
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    public RefreshJwtTokenFilter(Function<String, JwtToken> refreshTokenDeserializer) {
+    private final JdbcTemplate jdbcTemplate;
+
+    public RefreshJwtTokenFilter(Function<String, JwtToken> refreshTokenDeserializer, JdbcTemplate jdbcTemplate) {
         this.refreshTokenDeserializer = refreshTokenDeserializer;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
@@ -58,6 +63,7 @@ public class RefreshJwtTokenFilter extends OncePerRequestFilter {
 
                     Cookie cookie = cookieStream.get();
                     var refreshToken = this.refreshTokenDeserializer.apply(cookie.getValue());
+                    validateRefreshToken(refreshToken);
                     var accessToken = this.accessTokenFactory.apply(refreshToken);
 
                     response.setStatus(HttpServletResponse.SC_OK);
@@ -72,5 +78,21 @@ public class RefreshJwtTokenFilter extends OncePerRequestFilter {
                 throw new AccessDeniedException("User must be authenticated with Jwt");
             }
         filterChain.doFilter(request, response);
+    }
+
+    private void validateRefreshToken(JwtToken refreshToken) {
+        if (refreshToken == null
+                || refreshToken.expiresAt().isBefore(Instant.now())
+                || !refreshToken.authorities().contains("ROLE_REFRESH")
+                || isDeactivated(refreshToken)) {
+            throw new AccessDeniedException("Refresh token is invalid");
+        }
+    }
+
+    private boolean isDeactivated(JwtToken token) {
+        Boolean exists = jdbcTemplate.queryForObject("""
+                select exists(select id from deactivated_tokens where id = ?)
+                """, Boolean.class, token.id());
+        return Boolean.TRUE.equals(exists);
     }
 }

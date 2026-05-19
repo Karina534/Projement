@@ -27,8 +27,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -50,6 +48,10 @@ public class SecurityConfig {
     );
 
     private final BasicAuthenticationEntryPoint basicAuthenticationEntryPoint = new BasicAuthenticationEntryPoint();
+
+    public SecurityConfig() {
+        this.basicAuthenticationEntryPoint.setRealmName("Projemento");
+    }
 
     @Bean
     public JwtAuthenticationConfigurer jwtConfigurer(
@@ -77,9 +79,7 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain loginChain(HttpSecurity http, JwtAuthenticationConfigurer jwtAuthenticationConfigurer) throws Exception {
         return http.securityMatcher(LOGIN)
-                .csrf(csrf -> csrf.csrfTokenRepository(new CookieCsrfTokenRepository())
-                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                        .sessionAuthenticationStrategy((authentication, request, response) -> {}))
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(Customizer.withDefaults())
                 .authorizeHttpRequests(authorize ->
@@ -96,9 +96,7 @@ public class SecurityConfig {
     public SecurityFilterChain refreshAndLogoutFilterChain(HttpSecurity http, JwtAuthenticationConfigurer jwtAuthenticationConfigurer) throws Exception {
         return http.securityMatcher(REFRESH_AND_LOGOUT)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .csrf(csrf -> csrf.csrfTokenRepository(new CookieCsrfTokenRepository())
-                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                        .sessionAuthenticationStrategy((authentication, request, response) -> {}))
+                .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/refresh/token").hasAuthority("ROLE_REFRESH")
