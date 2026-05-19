@@ -1,0 +1,16 @@
+.git
+.gitignore
+.gitattributes
+.idea
+.vscode
+.mvn/wrapper/maven-wrapper.jar
+target
+build
+dist
+*.iml
+*.log
+.env
+.env.*
+!.env.example
+HELP.md
+task_tracker_tz.md

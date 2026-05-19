@@ -1,9 +1,45 @@
 services:
   postgres:
-    image: 'postgres:16'
+    image: postgres:16-alpine
+    container_name: projemento-postgres
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      POSTGRES_DB: ${POSTGRES_DB:-projemento}
+      POSTGRES_USER: ${POSTGRES_USER:-projemento}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-projemento_password}
     ports:
-      - '5432'
+      - "${POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: projemento:latest
+    container_name: projemento-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-projemento}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-projemento}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-projemento_password}
+      SPRING_DOCKER_COMPOSE_ENABLED: "false"
+      JWT_ACCESS_TOKEN_KEY: '${JWT_ACCESS_TOKEN_KEY:-{"kty":"oct","k":"asfgMthWBltjLyJn791pD38LKqirGhI8dWYEh_hzrWI"}}'
+      JWT_REFRESH_TOKEN_KEY: '${JWT_REFRESH_TOKEN_KEY:-{"kty":"oct","k":"HWS6epvQPr1Y71__89JrI66ONrXJLQOnJT4vaR0OQjM"}}'
+      JAVA_TOOL_OPTIONS: >-
+        -XX:MaxRAMPercentage=75.0
+        -XX:InitialRAMPercentage=25.0
+        -Djava.security.egd=file:/dev/./urandom
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
