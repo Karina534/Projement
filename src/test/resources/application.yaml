@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:projemento;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+jwt:
+  access-token-key: '{"kty":"oct","k":"asfgMthWBltjLyJn791pD38LKqirGhI8dWYEh_hzrWI"}'
+  refresh-token-key: '{"kty":"oct","k":"HWS6epvQPr1Y71__89JrI66ONrXJLQOnJT4vaR0OQjM"}'
