@@ -1,140 +1,173 @@
 # Projemento
 
-Backend API for project management with users, JWT authentication, projects, boards, tasks and comments.
+Projemento - монорепозиторий для системы управления проектами и задачами.
 
-## Stack
+Корень репозитория предназначен для общей инфраструктуры: Docker Compose, общие переменные окружения и документация по запуску всех сервисов вместе. Код отдельных частей проекта лежит в отдельных папках.
 
-- Java 21
-- Spring Boot 4
-- Spring Security
-- Spring Data JPA
-- PostgreSQL
-- Flyway migrations
-- springdoc OpenAPI / Swagger UI
-- Maven
-- Docker Compose
+## Структура репозитория
 
-## Quick Start With Docker
+```text
+Projement/
+  README.md
+  compose.yaml
+  .env.example
+  .gitignore
+  .dockerignore
 
-Requirements:
+  backend-java/
+    README.md
+    Dockerfile
+    pom.xml
+    mvnw
+    mvnw.cmd
+    src/
+    docs/
+
+  backend-go/
+    README.md
+    Dockerfile
+    go.mod
+    ...
+
+  frontend/
+    README.md
+    Dockerfile
+    package.json
+    ...
+```
+
+Сейчас реализован Java-бэкенд. Папки `backend-go` и `frontend` можно добавить позже, когда соответствующие части проекта появятся в репозитории.
+
+## Документация сервисов
+
+- [Java-бэкенд](backend-java/README.md)
+- Go-бэкенд: будет добавлен позже
+- Фронтенд: будет добавлен позже
+
+## Быстрый запуск
+
+Требования:
 
 - Docker
 - Docker Compose
 
-Run the application with PostgreSQL:
-
-```powershell
-docker compose up -d --build
-```
-
-The application will be available at:
-
-- API: `http://localhost:8080`
-- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
-- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
-- PostgreSQL from host: `localhost:55432`
-
-Check containers:
-
-```powershell
-docker compose ps
-```
-
-View application logs:
-
-```powershell
-docker compose logs -f app
-```
-
-Stop containers:
-
-```powershell
-docker compose down
-```
-
-Stop containers and remove the database volume:
-
-```powershell
-docker compose down -v
-```
-
-## Environment
-
-Docker Compose reads variables from `.env`.
-
-Local defaults are already provided in `.env` for development. For a new environment, copy `.env.example` to `.env` and change secrets:
+Перед первым запуском можно создать локальный `.env` из примера:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Available variables:
+В текущем репозитории `.env` уже содержит значения для локальной разработки. Этот файл не должен попадать в git.
 
-| Variable | Description | Default |
+Запустить все доступные сервисы:
+
+```powershell
+docker compose up -d --build
+```
+
+Проверить статус контейнеров:
+
+```powershell
+docker compose ps
+```
+
+Посмотреть логи Java-бэкенда:
+
+```powershell
+docker compose logs -f backend-java
+```
+
+Остановить контейнеры:
+
+```powershell
+docker compose down
+```
+
+Остановить контейнеры и удалить volume с базой данных:
+
+```powershell
+docker compose down -v
+```
+
+## Доступные адреса
+
+Java-бэкенд:
+
+```text
+http://localhost:8080
+```
+
+Swagger UI:
+
+```text
+http://localhost:8080/swagger-ui/index.html
+```
+
+OpenAPI JSON:
+
+```text
+http://localhost:8080/v3/api-docs
+```
+
+PostgreSQL с хоста:
+
+```text
+localhost:55432
+```
+
+## Переменные окружения
+
+Docker Compose читает переменные из `.env`.
+
+| Переменная | Назначение | Значение по умолчанию |
 | --- | --- | --- |
-| `POSTGRES_DB` | PostgreSQL database name | `projemento` |
-| `POSTGRES_USER` | PostgreSQL user | `projemento` |
-| `POSTGRES_PASSWORD` | PostgreSQL password | `projemento_password` |
-| `POSTGRES_PORT` | Host port for PostgreSQL | `55432` |
-| `APP_PORT` | Host port for the application | `8080` |
-| `JWT_ACCESS_TOKEN_KEY` | JWK secret for access tokens | development value |
-| `JWT_REFRESH_TOKEN_KEY` | JWK secret for refresh tokens | development value |
+| `POSTGRES_DB` | Имя базы PostgreSQL | `projemento` |
+| `POSTGRES_USER` | Пользователь PostgreSQL | `projemento` |
+| `POSTGRES_PASSWORD` | Пароль PostgreSQL | `projemento_password` |
+| `POSTGRES_PORT` | Порт PostgreSQL на хосте | `55432` |
+| `JAVA_BACKEND_PORT` | Порт Java-бэкенда на хосте | `8080` |
+| `JWT_ACCESS_TOKEN_KEY` | JWK-секрет для access token | значение для разработки |
+| `JWT_REFRESH_TOKEN_KEY` | JWK-секрет для refresh token | значение для разработки |
 
-Use unique 256-bit JWK secrets in production.
+Для production нужно заменить пароли и JWT-секреты на уникальные значения.
 
-## Local Run Without Docker
+## Docker Compose
 
-Start PostgreSQL separately or use only the database from Compose:
+Сейчас `compose.yaml` поднимает:
+
+- `postgres` - PostgreSQL 16;
+- `backend-java` - Spring Boot API из папки `backend-java`.
+
+Когда появятся Go-бэкенд и фронтенд, их нужно добавить в тот же `compose.yaml` отдельными сервисами:
+
+```yaml
+services:
+  backend-go:
+    build:
+      context: ./backend-go
+      dockerfile: Dockerfile
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+```
+
+## Полезные команды
+
+Пересобрать только Java-бэкенд:
 
 ```powershell
-docker compose up -d postgres
+docker compose build backend-java
 ```
 
-Run tests:
+Перезапустить только Java-бэкенд:
 
 ```powershell
-.\mvnw test
+docker compose restart backend-java
 ```
 
-Run the application locally:
-
-```powershell
-.\mvnw spring-boot:run
-```
-
-By default the local application connects to:
-
-```text
-jdbc:postgresql://localhost:5432/mydatabase
-```
-
-For Docker Compose, datasource settings are passed through environment variables and point to the `postgres` service.
-
-## Database Migrations
-
-Migrations are managed by Flyway and are applied automatically on application startup.
-
-Migration files are stored in:
-
-```text
-src/main/resources/db/migration
-```
-
-## Useful Commands
-
-Rebuild only the application image:
-
-```powershell
-docker compose build app
-```
-
-Restart the application:
-
-```powershell
-docker compose restart app
-```
-
-Open a PostgreSQL shell inside the database container:
+Открыть psql внутри контейнера PostgreSQL:
 
 ```powershell
 docker compose exec postgres psql -U projemento -d projemento
