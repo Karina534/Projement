@@ -79,6 +79,7 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain loginChain(HttpSecurity http, JwtAuthenticationConfigurer jwtAuthenticationConfigurer) throws Exception {
         return http.securityMatcher(LOGIN)
+                .cors(cors -> cors.disable())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(Customizer.withDefaults())
@@ -95,6 +96,7 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain refreshAndLogoutFilterChain(HttpSecurity http, JwtAuthenticationConfigurer jwtAuthenticationConfigurer) throws Exception {
         return http.securityMatcher(REFRESH_AND_LOGOUT)
+                .cors(cors -> cors.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
@@ -110,6 +112,7 @@ public class SecurityConfig {
     public SecurityFilterChain defaultFilterChain(
             HttpSecurity http, JwtAuthenticationConfigurer jwtAuthenticationConfigurer) throws Exception{
         return http.securityMatcher("/**")
+                .cors(cors -> cors.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
